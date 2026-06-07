@@ -3,10 +3,18 @@ import Toybox.System;
 import Toybox.WatchUi;
 import Toybox.Attention;
 
-class HelmLinkDelegate extends WatchUi.InputDelegate {
+class HelmLinkDelegate extends WatchUi.BehaviorDelegate {
 
     function initialize() {
-        InputDelegate.initialize();
+        BehaviorDelegate.initialize();
+    }
+
+    // Menu (hold UP on 5-button watches): toggle increment.
+    // Fallback for watches without a touchscreen, where the
+    // on-screen increment buttons can't be tapped.
+    function onMenu() as Boolean {
+        toggleIncrement();
+        return true;
     }
 
     function onKey(keyEvent as WatchUi.KeyEvent) as Boolean {
@@ -63,6 +71,12 @@ class HelmLinkDelegate extends WatchUi.InputDelegate {
             return true;
         }
 
+        // Some devices deliver menu as a key event rather than onMenu()
+        if (key == WatchUi.KEY_MENU) {
+            toggleIncrement();
+            return true;
+        }
+
         return false;
     }
 
@@ -71,32 +85,35 @@ class HelmLinkDelegate extends WatchUi.InputDelegate {
         var x = coords[0];
         var y = coords[1];
 
-        var cx = 195;
-        var btnW = 75;
-        var btnH = 32;
-        var btnY = 225;
-        var btn1X = cx - btnW - 5;
-        var btn10X = cx + 5;
+        var btnW = Layout.btnW();
+        var btnH = Layout.btnH();
+        var btnY = Layout.btnY();
+        var btn1X = Layout.btn1X();
+        var btn10X = Layout.btn10X();
 
         if (y >= btnY && y <= btnY + btnH) {
             if (x >= btn1X && x <= btn1X + btnW) {
-                AutopilotState.increment = 1;
-                if (Attention has :vibrate) {
-                    Attention.vibrate([new Attention.VibeProfile(25, 50)]);
-                }
-                WatchUi.requestUpdate();
+                setIncrement(1);
                 return true;
             }
             if (x >= btn10X && x <= btn10X + btnW) {
-                AutopilotState.increment = 10;
-                if (Attention has :vibrate) {
-                    Attention.vibrate([new Attention.VibeProfile(25, 50)]);
-                }
-                WatchUi.requestUpdate();
+                setIncrement(10);
                 return true;
             }
         }
         return false;
+    }
+
+    private function toggleIncrement() as Void {
+        setIncrement(AutopilotState.increment == 1 ? 10 : 1);
+    }
+
+    private function setIncrement(increment as Number) as Void {
+        AutopilotState.increment = increment;
+        if (Attention has :vibrate) {
+            Attention.vibrate([new Attention.VibeProfile(25, 50)]);
+        }
+        WatchUi.requestUpdate();
     }
 
     function onSwipe(swipeEvent as WatchUi.SwipeEvent) as Boolean {

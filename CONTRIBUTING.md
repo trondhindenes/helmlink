@@ -6,6 +6,8 @@
 
 Build from VS Code with the Monkey C extension ("Monkey C: Build Current Project"), or via CLI. Output lands in `watch-app/bin/watchapp.prg`.
 
+The manifest lists multiple supported devices, but a sideloadable `.prg` is built for one device at a time (`monkeyc -d <device>`). Building for a device other than `fr165` requires downloading its device files first via the Connect IQ SDK Manager. The screen layout is scaled from the FR165's 390x390 reference (see `watch-app/source/Layout.mc`) — when adding a new device, verify it in the simulator with that device profile.
+
 ### Android companion app
 
 ```bash

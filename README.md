@@ -9,11 +9,22 @@ Control an Orca Core autopilot from a Garmin Forerunner 165 watch, using an Andr
 Pre-built binaries are available on the [releases page](https://github.com/trondhindenes/helmlink/releases) as an alternative to building from source:
 
 - **helmlink-companion-debug.apk** — the Android companion app. Sideload it onto the phone (e.g. `adb install -r helmlink-companion-debug.apk`, or transfer the file and open it — requires allowing installs from unknown sources).
-- **helmlink-watchapp.prg** — the Garmin watch app. Copy it to the watch's `GARMIN/Apps/` folder over USB (see [Deploying to watch](#deploying-to-watch)).
+- **helmlink-watchapp.prg** — the Garmin watch app, built for the **Forerunner 165**. Copy it to the watch's `GARMIN/Apps/` folder over USB (see [Deploying to watch](#deploying-to-watch)). For other watch models, build from source for your device.
 
 ## Watch App
 
-Garmin Connect IQ widget written in Monkey C. Targets Forerunner 165.
+Garmin Connect IQ widget written in Monkey C.
+
+### Supported watches
+
+Developed and tested on the **Forerunner 165**. The manifest also includes other 5-button watches with Connect IQ 4.2.0+ — these are expected to work but are untested, and the layout is scaled rather than tuned per device:
+
+- Forerunner 165 / 165 Music (tested), 255 / 255S (incl. Music), 265 / 265S, 955, 965
+- fenix 7 / 7S / 7X (incl. Pro)
+- epix (Gen 2) / epix Pro (42/47/51mm)
+- Enduro 2
+
+Note that the pre-built `.prg` on the releases page is compiled for the FR165 specifically — for any other watch you currently need to build from source with `-d <device>` (see below).
 
 ### Controls
 
@@ -23,6 +34,7 @@ Garmin Connect IQ widget written in Monkey C. Targets Forerunner 165.
 | UP | Adjust heading + (by selected increment) |
 | DOWN | Adjust heading - (by selected increment) |
 | Tap +/-1 or +/-10 | Select heading increment |
+| Hold UP (menu) | Toggle heading increment (for non-touch watches) |
 | Swipe | Cycle mode (AUTO / WIND / NO DRIFT) |
 | ESC | Exit app |
 
