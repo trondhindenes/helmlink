@@ -22,7 +22,6 @@ Developed and tested on the **Forerunner 165**. The manifest also includes other
 - Forerunner 165 / 165 Music (tested), 255 / 255S (incl. Music), 265 / 265S, 955, 965
 - fenix 7 / 7S / 7X (incl. Pro)
 - epix (Gen 2) / epix Pro (42/47/51mm)
-- Enduro 2
 
 Note that the pre-built `.prg` on the releases page is compiled for the FR165 specifically — for any other watch you currently need to build from source with `-d <device>` (see below).
 
