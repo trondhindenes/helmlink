@@ -1,6 +1,9 @@
 # macOS
 .DS_Store
 
+# Release build output
+dist/
+
 # Claude Code local settings
 .claude/settings.local.json
 

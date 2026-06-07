@@ -28,19 +28,23 @@ git push origin main
 # 2. Compute the version
 VERSION=$(autoversion 2>/dev/null | jq -r .semver)
 
-# 3. Stage the binaries with friendly names
-cp android-app/app/build/outputs/apk/debug/app-debug.apk /tmp/helmlink-companion-debug.apk
-cp watch-app/bin/watchapp.prg /tmp/helmlink-watchapp.prg
+# 3. Build the watch app for every supported device (skips devices whose
+#    device files aren't installed via the Connect IQ SDK Manager)
+./scripts/build-watch.sh
 
-# 4. Create the release (tags the current main HEAD)
+# 4. Build the Android app and stage it with a friendly name
+(cd android-app && ./gradlew assembleDebug)
+cp android-app/app/build/outputs/apk/debug/app-debug.apk dist/helmlink-companion-debug.apk
+
+# 5. Create the release (tags the current main HEAD)
 gh release create "$VERSION" \
-  /tmp/helmlink-companion-debug.apk \
-  /tmp/helmlink-watchapp.prg \
+  dist/helmlink-companion-debug.apk \
+  dist/helmlink-watchapp-*.prg \
   --title "HelmLink $VERSION" \
   --prerelease \
   --notes "Debug builds:
 - **helmlink-companion-debug.apk** — Android companion app (debug-signed, install via sideload)
-- **helmlink-watchapp.prg** — Garmin watch app (sideload to the watch's /GARMIN/APPS folder)"
+- **helmlink-watchapp-\<device\>.prg** — Garmin watch app per device (sideload to the watch's /GARMIN/APPS folder)"
 ```
 
 Notes:
