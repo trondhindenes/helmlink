@@ -4,6 +4,13 @@ Control an Orca Core autopilot from a Garmin Forerunner 165 watch, using an Andr
 
 **Architecture:** Watch (Garmin CIQ) &harr; Phone (Android companion app via BLE) &harr; Autopilot (Orca Core HTTP/WebSocket)
 
+## Installing from releases
+
+Pre-built binaries are available on the [releases page](https://github.com/trondhindenes/helmlink/releases) as an alternative to building from source:
+
+- **helmlink-companion-debug.apk** — the Android companion app. Sideload it onto the phone (e.g. `adb install -r helmlink-companion-debug.apk`, or transfer the file and open it — requires allowing installs from unknown sources).
+- **helmlink-watchapp.prg** — the Garmin watch app. Copy it to the watch's `GARMIN/Apps/` folder over USB (see [Deploying to watch](#deploying-to-watch)).
+
 ## Watch App
 
 Garmin Connect IQ widget written in Monkey C. Targets Forerunner 165.
