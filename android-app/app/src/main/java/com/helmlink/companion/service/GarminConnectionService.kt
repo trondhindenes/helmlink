@@ -16,7 +16,7 @@ class GarminConnectionService(private val context: Context) {
 
     companion object {
         private const val TAG = "GarminConnection"
-        const val WATCH_APP_ID = "15a3b6d3-c6a6-4452-ab21-ad992ef28dc6"
+        const val WATCH_APP_ID = "2a8d7403-e762-4034-9632-4b1bccba1840"
 
         // The watch widget pings every 5s while open; if we haven't heard from it
         // in this long, it's closed and ConnectIQ sends would fail with

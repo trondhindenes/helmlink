@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="5">
     <iq:application entry="HelmLinkApp"
-                    id="15a3b6d3-c6a6-4452-ab21-ad992ef28dc6"
+                    id="2a8d7403-e762-4034-9632-4b1bccba1840"
                     launcherIcon="@Drawables.LauncherIcon"
                     minApiLevel="4.2.0"
                     name="@Strings.AppName"
