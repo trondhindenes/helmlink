@@ -1,0 +1,34 @@
+# macOS
+.DS_Store
+
+# Claude Code local settings
+.claude/settings.local.json
+
+# IDE
+.idea/
+.vscode/
+
+# Garmin Connect IQ build output
+watch-app/bin/
+watch-app/gen/
+watch-app/mir/
+watch-app/internal-mir/
+watch-app/debug-logs/
+*.prg
+*.prg.debug.xml
+*.iq
+
+# Connect IQ developer key (should never be committed)
+*.der
+*developer_key*
+
+# Android / Gradle
+android-app/.gradle/
+android-app/.kotlin/
+android-app/local.properties
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/

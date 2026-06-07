@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="5">
+    <iq:application entry="HelmLinkApp"
+                    id="15a3b6d3-c6a6-4452-ab21-ad992ef28dc6"
+                    launcherIcon="@Drawables.LauncherIcon"
+                    minApiLevel="4.2.0"
+                    name="@Strings.AppName"
+                    type="widget">
+        <iq:products>
+            <iq:product id="fr165"/>
+        </iq:products>
+        <iq:permissions>
+            <iq:uses-permission id="Communications"/>
+        </iq:permissions>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+    </iq:application>
+</iq:manifest>
