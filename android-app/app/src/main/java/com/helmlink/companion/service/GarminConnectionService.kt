@@ -9,6 +9,8 @@ import com.garmin.android.connectiq.IQApp
 import com.garmin.android.connectiq.IQDevice
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import java.util.Timer
+import java.util.TimerTask
 
 class GarminConnectionService(private val context: Context) {
 
@@ -28,9 +30,22 @@ class GarminConnectionService(private val context: Context) {
     private var connectIQ: ConnectIQ? = null
     private var connectedDevice: IQDevice? = null
     private var watchApp: IQApp? = null
+    private var livenessTimer: Timer? = null
 
     private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
     val connectionState: StateFlow<ConnectionState> = _connectionState
+
+    // The indicator reflects actual message flow, not just SDK registration:
+    // red = watch not registered, yellow = registered but the widget isn't
+    // talking to us, green = messages received within the activity window.
+    private fun updateConnectionState() {
+        _connectionState.value = when {
+            connectedDevice == null -> ConnectionState.DISCONNECTED
+            System.currentTimeMillis() - lastWatchMessageAt <= WATCH_ACTIVE_TIMEOUT_MS ->
+                ConnectionState.CONNECTED
+            else -> ConnectionState.CONNECTING
+        }
+    }
 
     var onCommandReceived: ((AutopilotCommand) -> Unit)? = null
     var onPingReceived: (() -> Unit)? = null
@@ -45,6 +60,16 @@ class GarminConnectionService(private val context: Context) {
 
     fun initialize() {
         _connectionState.value = ConnectionState.CONNECTING
+
+        livenessTimer?.cancel()
+        livenessTimer = Timer("watch-liveness").apply {
+            scheduleAtFixedRate(object : TimerTask() {
+                override fun run() {
+                    updateConnectionState()
+                }
+            }, 5_000, 5_000)
+        }
+
         try {
             connectIQ = ConnectIQ.getInstance(context, ConnectIQ.IQConnectType.WIRELESS)
             connectIQ?.initialize(context, true, object : ConnectIQ.ConnectIQListener {
@@ -84,8 +109,8 @@ class GarminConnectionService(private val context: Context) {
                     if (status == IQDevice.IQDeviceStatus.CONNECTED) {
                         registerWatchApp(device)
                     } else if (device == connectedDevice) {
-                        _connectionState.value = ConnectionState.DISCONNECTED
                         connectedDevice = null
+                        updateConnectionState()
                     }
                 }
 
@@ -107,7 +132,7 @@ class GarminConnectionService(private val context: Context) {
                 }
             }
             connectedDevice = device
-            _connectionState.value = ConnectionState.CONNECTED
+            updateConnectionState()
             Log.d(TAG, "Registered for watch app events on ${device.friendlyName}")
             DebugLog.record(DebugLog.Kind.INFO, "Registered watch app", device.friendlyName ?: "")
         } catch (e: Exception) {
@@ -119,6 +144,7 @@ class GarminConnectionService(private val context: Context) {
     private fun handleWatchMessage(msg: Any?) {
         if (msg is Map<*, *>) {
             lastWatchMessageAt = System.currentTimeMillis()
+            updateConnectionState()
             val cmd = msg["cmd"] as? String
             DebugLog.record(
                 DebugLog.Kind.WATCH_IN,
@@ -255,6 +281,8 @@ class GarminConnectionService(private val context: Context) {
     }
 
     fun shutdown() {
+        livenessTimer?.cancel()
+        livenessTimer = null
         try {
             connectIQ?.shutdown(context)
         } catch (e: Exception) {
