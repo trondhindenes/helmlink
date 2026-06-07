@@ -103,5 +103,6 @@ class OrcaDiscoveryService(context: Context) {
         }
         discoveryListener = null
         _isSearching.value = false
+        _discoveredHost.value = null
     }
 }

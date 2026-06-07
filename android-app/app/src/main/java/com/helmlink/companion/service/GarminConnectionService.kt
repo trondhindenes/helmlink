@@ -66,6 +66,7 @@ class GarminConnectionService(private val context: Context) {
             scheduleAtFixedRate(object : TimerTask() {
                 override fun run() {
                     updateConnectionState()
+                    retryRegistrationIfUnconfirmed()
                 }
             }, 5_000, 5_000)
         }
@@ -134,11 +135,29 @@ class GarminConnectionService(private val context: Context) {
             connectedDevice = device
             updateConnectionState()
             Log.d(TAG, "Registered for watch app events on ${device.friendlyName}")
-            DebugLog.record(DebugLog.Kind.INFO, "Registered watch app", device.friendlyName ?: "")
+            DebugLog.record(
+                DebugLog.Kind.INFO,
+                "Registered watch app",
+                "${device.friendlyName} app=$WATCH_APP_ID"
+            )
         } catch (e: Exception) {
             Log.e(TAG, "Failed to register watch app", e)
             DebugLog.record(DebugLog.Kind.INFO, "Failed to register watch app", e.message ?: "")
         }
+    }
+
+    // GCM's ConnectIQService has a thread-safety bug (ConcurrentModificationException
+    // in its registration handling) that can silently drop our registerApp call —
+    // registerApp is one-way, so we never see the failure. Until the watch has
+    // actually sent us a message, the registration is unproven: keep re-registering
+    // on the liveness tick so one attempt eventually lands outside the race window.
+    private fun retryRegistrationIfUnconfirmed() {
+        val device = connectedDevice ?: return
+        if (lastWatchMessageAt > 0) return  // a message arrived: registration is proven
+
+        Log.d(TAG, "No watch message yet - re-registering app events")
+        DebugLog.record(DebugLog.Kind.INFO, "Re-registering watch app", "no watch message received yet")
+        registerWatchApp(device)
     }
 
     private fun handleWatchMessage(msg: Any?) {

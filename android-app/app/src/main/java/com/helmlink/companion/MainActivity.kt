@@ -11,6 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.helmlink.companion.service.GarminConnectionService
 import com.helmlink.companion.service.HelmLinkBridgeService
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -28,6 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
@@ -119,6 +121,7 @@ fun DashboardScreen(
     val isTestMode by viewModel.isTestMode.collectAsStateWithLifecycle()
     var showSettings by remember { mutableStateOf(false) }
     var showExitConfirm by remember { mutableStateOf(false) }
+    var showInfo by remember { mutableStateOf(false) }
     var debugMode by remember { mutableStateOf(false) }
 
     Column(
@@ -144,6 +147,12 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
+                TextButton(
+                    onClick = { showInfo = true },
+                    contentPadding = PaddingValues(horizontal = 8.dp)
+                ) {
+                    Text("Info")
+                }
                 TextButton(
                     onClick = { showSettings = true },
                     contentPadding = PaddingValues(horizontal = 8.dp)
@@ -260,6 +269,57 @@ fun DashboardScreen(
             dismissButton = {
                 TextButton(onClick = { showExitConfirm = false }) { Text("Cancel") }
             }
+        )
+    }
+
+    if (showInfo) {
+        InfoDialog(onDismiss = { showInfo = false })
+    }
+}
+
+@Composable
+fun InfoDialog(onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val versionName = remember {
+        try {
+            context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
+        } catch (e: Exception) {
+            "?"
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("HelmLink Info") },
+        text = {
+            SelectionContainer {
+                Column {
+                    InfoRow("Watch app UUID", GarminConnectionService.WATCH_APP_ID)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    InfoRow("Package", context.packageName)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    InfoRow("Version", versionName)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text("Close") }
+        }
+    )
+}
+
+@Composable
+fun InfoRow(label: String, value: String) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodySmall,
+            fontFamily = FontFamily.Monospace
         )
     }
 }

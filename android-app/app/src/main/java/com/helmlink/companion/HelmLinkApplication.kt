@@ -57,6 +57,7 @@ class HelmLinkApplication : Application() {
 
     private var stateCollectorJob: Job? = null
     private var orcaStateJob: Job? = null
+    private var discoveryJob: Job? = null
 
     fun initializeBridge() {
         if (isBridgeInitialized) return
@@ -80,6 +81,7 @@ class HelmLinkApplication : Application() {
 
         stateCollectorJob?.cancel()
         orcaStateJob?.cancel()
+        discoveryJob?.cancel()
         garminService.onCommandReceived = null
         garminService.onPingReceived = null
         garminService.shutdown()
@@ -95,6 +97,7 @@ class HelmLinkApplication : Application() {
     private fun applyMode() {
         stateCollectorJob?.cancel()
         orcaStateJob?.cancel()
+        discoveryJob?.cancel()
 
         if (_isTestMode.value) {
             orcaClient.disconnect()
@@ -136,11 +139,13 @@ class HelmLinkApplication : Application() {
 
             if (settings.autoDiscover) {
                 Log.d(TAG, "Starting autodiscovery...")
+                orcaClient.disconnect()
                 orcaDiscovery.startDiscovery()
-                scope.launch {
+                discoveryJob = scope.launch {
                     orcaDiscovery.discoveredHost.collect { host ->
                         if (host != null) {
                             Log.d(TAG, "Discovered Orca at $host")
+                            orcaClient.disconnect()
                             orcaClient.configure(host, settings.httpPort, settings.wsPort)
                             orcaClient.connect()
                         }
@@ -149,6 +154,7 @@ class HelmLinkApplication : Application() {
             } else {
                 Log.d(TAG, "Using manual host: ${settings.host}")
                 orcaDiscovery.stopDiscovery()
+                orcaClient.disconnect()
                 orcaClient.configure(settings.host, settings.httpPort, settings.wsPort)
                 orcaClient.connect()
             }
