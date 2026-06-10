@@ -1,12 +1,23 @@
 <?xml version="1.0"?>
 <iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="5">
-    <iq:application entry="HelmLinkApp"
-                    id="2a8d7403-e762-4034-9632-4b1bccba1840"
-                    launcherIcon="@Drawables.LauncherIcon"
-                    minApiLevel="4.2.0"
-                    name="@Strings.AppName"
-                    type="widget">
+    <iq:application entry="HelmLinkApp" id="2a8d7403-e762-4034-9632-4b1bccba1840" launcherIcon="@Drawables.LauncherIcon" minApiLevel="3.1.0" name="@Strings.AppName" type="watch-app">
         <iq:products>
+            <iq:product id="epix2"/>
+            <iq:product id="epix2pro42mm"/>
+            <iq:product id="epix2pro47mm"/>
+            <iq:product id="epix2pro51mm"/>
+            <iq:product id="fenix6"/>
+            <iq:product id="fenix6pro"/>
+            <iq:product id="fenix6s"/>
+            <iq:product id="fenix6spro"/>
+            <iq:product id="fenix6xpro"/>
+            <iq:product id="fenix7"/>
+            <iq:product id="fenix7pro"/>
+            <iq:product id="fenix7pronowifi"/>
+            <iq:product id="fenix7s"/>
+            <iq:product id="fenix7spro"/>
+            <iq:product id="fenix7x"/>
+            <iq:product id="fenix7xpro"/>
             <iq:product id="fr165"/>
             <iq:product id="fr165m"/>
             <iq:product id="fr255"/>
@@ -17,16 +28,6 @@
             <iq:product id="fr265s"/>
             <iq:product id="fr955"/>
             <iq:product id="fr965"/>
-            <iq:product id="fenix7"/>
-            <iq:product id="fenix7s"/>
-            <iq:product id="fenix7x"/>
-            <iq:product id="fenix7pro"/>
-            <iq:product id="fenix7spro"/>
-            <iq:product id="fenix7xpro"/>
-            <iq:product id="epix2"/>
-            <iq:product id="epix2pro42mm"/>
-            <iq:product id="epix2pro47mm"/>
-            <iq:product id="epix2pro51mm"/>
         </iq:products>
         <iq:permissions>
             <iq:uses-permission id="Communications"/>
@@ -34,5 +35,6 @@
         <iq:languages>
             <iq:language>eng</iq:language>
         </iq:languages>
+        <iq:barrels/>
     </iq:application>
 </iq:manifest>

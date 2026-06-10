@@ -8,13 +8,19 @@ Orca Core simulator for testing the Autopilot Companion app.
 
 Speaks the same protocol the app expects:
   HTTP  :8088  GET  /v1/autopilots                     -> {"results": [0]}
-  HTTP  :8088  POST /v1/autopilots/{id}/mode           <- {"value": 0|1|2|7}
+  HTTP  :8088  POST /v1/autopilots/{id}/mode           <- {"value": 0|1|2|4|7}
   HTTP  :8088  POST /v1/autopilots/{id}/course-change  <- {"value": deg, "wind_value": deg?}
   WS    :8089  /v1/sensors/full?interval=500           -> sensor frames
 
 Every HTTP response is delayed by a random amount (default 0.5s-20s) to
 exercise the app's pending/ack/timeout handling. Sensor frames are pushed
 on the configured interval and reflect state changes as they are applied.
+
+An interactive console (stdin) lets you change the autopilot state directly,
+simulating an external controller such as a chartplotter putting the pilot
+into NAVIGATION (route) mode without going through the companion app. Type
+`help` at the prompt for commands. This is how you test the watch's NAV
+handling, which can only be entered from outside the watch/app.
 
 Run:  uv run orca_simulator.py
 """
@@ -32,7 +38,15 @@ import time
 
 from aiohttp import web, WSMsgType
 
-MODE_NAMES = {0: "STANDBY", 1: "AUTO", 2: "NO_DRIFT", 7: "WIND"}
+MODE_NAMES = {0: "STANDBY", 1: "AUTO", 2: "NO_DRIFT", 4: "NAVIGATION", 7: "WIND"}
+# Console aliases for the externally-set modes a chartplotter could command.
+MODE_ALIASES = {
+    "standby": 0, "off": 0,
+    "auto": 1,
+    "nodrift": 2, "no_drift": 2, "no-drift": 2,
+    "nav": 4, "navigation": 4, "route": 4,
+    "wind": 7,
+}
 
 
 def log(msg: str) -> None:
@@ -40,9 +54,9 @@ def log(msg: str) -> None:
 
 
 class OrcaState:
-    def __init__(self, autopilot_id: int, heading: int):
+    def __init__(self, autopilot_id: int, heading: int, mode: int = 0):
         self.autopilot_id = autopilot_id
-        self.mode = 0  # STANDBY
+        self.mode = mode  # see MODE_NAMES
         self.heading = heading % 360  # degrees
         self.wind_hold_angle = 0  # degrees
 
@@ -60,13 +74,80 @@ class OrcaState:
 class Simulator:
     def __init__(self, args):
         self.args = args
-        self.state = OrcaState(args.autopilot_id, args.initial_heading)
+        self.state = OrcaState(
+            args.autopilot_id,
+            args.initial_heading,
+            MODE_ALIASES[args.initial_mode.lower()],
+        )
 
     async def delay(self, what: str) -> float:
         d = random.uniform(self.args.min_delay, self.args.max_delay)
         log(f"{what}: delaying response {d:.1f}s")
         await asyncio.sleep(d)
         return d
+
+    # --- Interactive console (stdin): simulate an external controller ---
+    # State set here is applied immediately (no response delay) and propagates
+    # to the companion app via the next sensor frame, exactly as a chartplotter
+    # driving the pilot would. Use this to drive NAVIGATION mode, which the
+    # watch/app intentionally cannot enter.
+
+    def apply_external(self, line: str) -> None:
+        parts = line.strip().split()
+        if not parts:
+            return
+        cmd = parts[0].lower()
+
+        if cmd in ("help", "?"):
+            log("console commands (external controller):")
+            log("  standby | auto | nodrift | wind | nav   set autopilot mode")
+            log("  mode <int>                               set raw mode value")
+            log("  heading <deg> | h <deg>                  set steered heading")
+            log("  status                                   print current state")
+            return
+
+        if cmd in ("status",):
+            log(f"state: mode={MODE_NAMES.get(self.state.mode, self.state.mode)} "
+                f"heading={self.state.heading:03d} wind_hold={self.state.wind_hold_angle:03d}")
+            return
+
+        if cmd in ("heading", "h"):
+            if len(parts) < 2 or not parts[1].lstrip("-").isdigit():
+                log("usage: heading <deg>")
+                return
+            self.state.heading = int(parts[1]) % 360
+            log(f"external control -> heading {self.state.heading:03d}")
+            return
+
+        if cmd == "mode":
+            if len(parts) < 2 or not parts[1].isdigit():
+                log("usage: mode <int>")
+                return
+            value = int(parts[1])
+        elif cmd in MODE_ALIASES:
+            value = MODE_ALIASES[cmd]
+        else:
+            log(f"unknown command: {line.strip()!r} (type 'help')")
+            return
+
+        self.state.mode = value
+        log(f"external control -> mode {MODE_NAMES.get(value, value)}")
+
+    async def console(self) -> None:
+        if not sys.stdin or not sys.stdin.isatty():
+            log("stdin is not a TTY - external-control console disabled")
+            return
+        loop = asyncio.get_running_loop()
+        log("external-control console ready (type 'help', e.g. 'nav' to start route mode)")
+        while True:
+            line = await loop.run_in_executor(None, sys.stdin.readline)
+            if line == "":  # EOF (Ctrl-D)
+                log("console closed (EOF)")
+                return
+            try:
+                self.apply_external(line)
+            except Exception as e:  # never let a typo kill the simulator
+                log(f"console error: {e}")
 
     # --- HTTP handlers (port 8088) ---
 
@@ -162,10 +243,14 @@ async def main(args) -> None:
 
     log(f"Orca Core simulator running: HTTP :{args.http_port}  WS :{args.ws_port}")
     log(f"Response delay: {args.min_delay}s - {args.max_delay}s")
-    log(f"Autopilot id={args.autopilot_id} heading={sim.state.heading:03d} mode=STANDBY")
+    log(f"Autopilot id={args.autopilot_id} heading={sim.state.heading:03d} "
+        f"mode={MODE_NAMES.get(sim.state.mode, sim.state.mode)}")
 
     if not args.no_mdns:
         start_mdns(args.http_port)
+
+    if not args.no_console:
+        asyncio.create_task(sim.console())  # external controller, runs alongside
 
     await asyncio.Event().wait()  # run until Ctrl-C
 
@@ -178,12 +263,19 @@ if __name__ == "__main__":
     p.add_argument("--max-delay", type=float, default=20.0, help="max response delay in seconds")
     p.add_argument("--autopilot-id", type=int, default=0)
     p.add_argument("--initial-heading", type=int, default=270)
+    p.add_argument("--initial-mode", default="standby",
+                   help="starting mode: standby|auto|nodrift|wind|nav (default standby)")
     p.add_argument("--no-mdns", action="store_true", help="don't advertise via dns-sd")
+    p.add_argument("--no-console", action="store_true",
+                   help="disable the interactive external-control console")
     p.add_argument("--verbose", action="store_true", help="log every websocket frame")
     args = p.parse_args()
 
     if args.min_delay > args.max_delay:
         sys.exit("--min-delay must be <= --max-delay")
+
+    if args.initial_mode.lower() not in MODE_ALIASES:
+        sys.exit(f"--initial-mode must be one of: {', '.join(sorted(set(MODE_ALIASES)))}")
 
     try:
         asyncio.run(main(args))

@@ -6,6 +6,9 @@ module AutopilotState {
     const MODE_WIND = 1;
     const MODE_NO_DRIFT = 2;
     const NUM_MODES = 3;
+    // Route following, set externally (e.g. chartplotter). Deliberately outside
+    // the 0..NUM_MODES cycle so the watch can never select it via cycleMode().
+    const MODE_NAV = 3;
 
     var engaged as Boolean = false;
     var heading as Number = 270;
@@ -37,6 +40,8 @@ module AutopilotState {
                 return "WIND";
             case MODE_NO_DRIFT:
                 return "NO_DRIFT";
+            case MODE_NAV:
+                return "NAVIGATION";
             default:
                 return "---";
         }

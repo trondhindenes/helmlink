@@ -13,7 +13,7 @@ Pre-built binaries are available on the [releases page](https://github.com/trond
 
 ## Watch App
 
-Garmin Connect IQ widget written in Monkey C.
+Garmin Connect IQ watch-app written in Monkey C.
 
 ### Supported watches
 
@@ -45,7 +45,7 @@ Build from VS Code with the Monkey C extension, or from command line:
 
 ```sh
 cd watch-app
-monkeyc -f monkey.jungle -o bin/AutopilotWidget.prg -y /path/to/developer_key.der -d fr165
+monkeyc -f monkey.jungle -o bin/AutopilotApp.prg -y /path/to/developer_key.der -d fr165
 ```
 
 ### Deploying to watch

@@ -71,6 +71,12 @@ class HelmLinkView extends WatchUi.View {
             dc.fillRoundedRectangle(cx - badgeW / 2, badgeY, badgeW, badgeH, 8);
             dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
             dc.drawText(cx, badgeY + Layout.scaleY(4), Graphics.FONT_MEDIUM, "NO PHONE", Graphics.TEXT_JUSTIFY_CENTER);
+        } else if (AutopilotState.mode == AutopilotState.MODE_NAV) {
+            // Externally controlled route mode: engaged, but heading/mode locked.
+            dc.setColor(0x8800CC, 0x8800CC);
+            dc.fillRoundedRectangle(cx - badgeW / 2, badgeY, badgeW, badgeH, 8);
+            dc.setColor(Graphics.COLOR_WHITE, Graphics.COLOR_TRANSPARENT);
+            dc.drawText(cx, badgeY + Layout.scaleY(4), Graphics.FONT_MEDIUM, "NAV", Graphics.TEXT_JUSTIFY_CENTER);
         } else if (AutopilotState.pending) {
             dc.setColor(0xCC8800, 0xCC8800);
             dc.fillRoundedRectangle(cx - badgeW / 2, badgeY, badgeW, badgeH, 8);
@@ -93,6 +99,8 @@ class HelmLinkView extends WatchUi.View {
         switch (AutopilotState.mode) {
             case AutopilotState.MODE_NO_DRIFT:
                 return "NO DRIFT";
+            case AutopilotState.MODE_NAV:
+                return "NAV";
             default:
                 return AutopilotState.getModeName();
         }
@@ -106,6 +114,8 @@ class HelmLinkView extends WatchUi.View {
                 return 0x00CCCC;
             case AutopilotState.MODE_NO_DRIFT:
                 return 0xFFAA00;
+            case AutopilotState.MODE_NAV:
+                return 0xCC66FF;
             default:
                 return Graphics.COLOR_WHITE;
         }

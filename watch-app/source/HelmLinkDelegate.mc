@@ -39,7 +39,7 @@ class HelmLinkDelegate extends WatchUi.BehaviorDelegate {
         }
 
         if (key == WatchUi.KEY_UP) {
-            if (!AutopilotState.phoneConnected) {
+            if (!AutopilotState.phoneConnected || AutopilotState.mode == AutopilotState.MODE_NAV) {
                 rejectInput();
                 return true;
             }
@@ -53,7 +53,7 @@ class HelmLinkDelegate extends WatchUi.BehaviorDelegate {
         }
 
         if (key == WatchUi.KEY_DOWN) {
-            if (!AutopilotState.phoneConnected) {
+            if (!AutopilotState.phoneConnected || AutopilotState.mode == AutopilotState.MODE_NAV) {
                 rejectInput();
                 return true;
             }
@@ -117,7 +117,8 @@ class HelmLinkDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onSwipe(swipeEvent as WatchUi.SwipeEvent) as Boolean {
-        if (!AutopilotState.phoneConnected) {
+        // No mode switching while the autopilot is in externally-set NAV mode.
+        if (!AutopilotState.phoneConnected || AutopilotState.mode == AutopilotState.MODE_NAV) {
             rejectInput();
             return true;
         }

@@ -81,6 +81,13 @@ class HelmLinkApp extends Application.AppBase {
                         AutopilotState.mode = AutopilotState.MODE_WIND;
                     } else if (modeName.equals("NO_DRIFT")) {
                         AutopilotState.mode = AutopilotState.MODE_NO_DRIFT;
+                    } else if (modeName.equals("NAVIGATION")) {
+                        AutopilotState.mode = AutopilotState.MODE_NAV;
+                    } else if (modeName.equals("STANDBY")
+                            && AutopilotState.mode == AutopilotState.MODE_NAV) {
+                        // Left an externally-set NAV; NAV isn't watch-selectable,
+                        // so fall back to a real mode for the next engage.
+                        AutopilotState.mode = AutopilotState.MODE_AUTO;
                     }
                     if (AutopilotState.pending) {
                         AutopilotState.pending = false;

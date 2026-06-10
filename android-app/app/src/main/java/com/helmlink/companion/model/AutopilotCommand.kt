@@ -27,11 +27,16 @@ object OrcaModes {
     const val AUTO = "AUTO"
     const val NO_DRIFT = "NO_DRIFT"
     const val WIND = "WIND"
+    // Route/waypoint following. The autopilot can be put in this mode from the
+    // chartplotter; HelmLink does not let the watch engage it, but it must be
+    // surfaced rather than shown as STANDBY.
+    const val NAVIGATION = "NAVIGATION"
 
     fun fromValue(value: Int): String = when (value) {
         0 -> STANDBY
         1 -> AUTO
         2 -> NO_DRIFT
+        4 -> NAVIGATION
         7 -> WIND
         else -> STANDBY
     }
@@ -40,6 +45,7 @@ object OrcaModes {
         STANDBY -> 0
         AUTO -> 1
         NO_DRIFT -> 2
+        NAVIGATION -> 4
         WIND -> 7
         else -> 0
     }

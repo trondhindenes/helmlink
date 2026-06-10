@@ -196,6 +196,12 @@ class HelmLinkApplication : Application() {
                 }
             }
             "ADJUST" -> {
+                // Heading is route-controlled in NAVIGATION; ignore manual nudges.
+                if (_activeAutopilotState.value.mode == OrcaModes.NAVIGATION) {
+                    garminService.ackSeq(command.seq)
+                    sendCurrentStateToWatch()
+                    return
+                }
                 val desiredHeading = command.detail.toIntOrNull() ?: 0
                 val delta = headingDelta(commandedHeading, desiredHeading)
                 commandedHeading = desiredHeading
@@ -208,6 +214,13 @@ class HelmLinkApplication : Application() {
             }
             "MODE" -> {
                 val currentState = _activeAutopilotState.value
+                // No mode switching out of (or into) NAVIGATION from the watch;
+                // the only allowed exit is DISENGAGE -> STANDBY.
+                if (currentState.mode == OrcaModes.NAVIGATION) {
+                    garminService.ackSeq(command.seq)
+                    sendCurrentStateToWatch()
+                    return
+                }
                 if (currentState.engaged) {
                     orcaClient.setMode(command.detail) { success ->
                         garminService.ackSeq(command.seq)
